@@ -1,3 +1,16 @@
-# Data Mining - Final Project
+# Data Mining Project [course id]
 
-Data Mining 2024/25 final project repo. contains the data, analysis, and reports for the final project component for the course Introduction to Data Mining (2024-25)
+This repo contains the code, data, notebooks, and reports for the final project of the course Introduction to Data mining. The project consists of two parts: 1. data exploration and 2. html website data classification. see ./project.pdf
+
+## Part 1. Physical Activity Data Exploration
+
+## Part 2. Website Classification
+
+### Installation and execution
+
+#### requirements
+
+#### installation
+
+#### running the analysis
+
