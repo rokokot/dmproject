@@ -1,0 +1,9 @@
+# LaTeX Intermediate Files
+*.aux
+*.log
+*.out
+*.toc
+main.pdf
+
+# Mac system files
+.DS_Store
