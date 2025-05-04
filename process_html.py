@@ -13,7 +13,7 @@ Outs:
 
 """
 
-def read_files(file_path):
+def read_files(file_path):    # quick file reader to string
   try:
     with open(file_path, 'r') as file:
       content = file.read()
@@ -24,7 +24,7 @@ def read_files(file_path):
     return ""
   
 
-def clean_html(html):
+def clean_html(html):   # very similar to exercise code
 
   soup = BeautifulSoup(html,'html.parser')
 
@@ -38,7 +38,7 @@ def clean_html(html):
   text = ' '.join(chunk for chunk in chunks if chunk)     # beautiful loop
   return text
 
-def extract_title(html):
+def extract_title(html):    # important feature to look at
   "get first heading from source"
   soup = BeautifulSoup(html, 'html.parser')
 
@@ -54,7 +54,7 @@ def extract_title(html):
 
   return ""
 
-def extract_headings(html):
+def extract_headings(html):   # rational behind this
 
 def extract_links(html):
 
@@ -94,15 +94,11 @@ def process_html_advanced(html, file=""):
 
   }
 
+  return processed_html
 
 
 
-
-
-
-
-
-def load_datasets(dir):
+def load_datasets(dir):   # function to read data from html files, and annotate our train data based on subdir name
   
   data = []
   labels = []
@@ -111,21 +107,47 @@ def load_datasets(dir):
     print(f'error, {dir} doesnt exist')
     return pd.DataFrame(), []
   
-  for file in os.listdir(dir):
-    if file.endswith('.html'):
-      file_path = os.path.join(dir, file)
-      content = read_files(file_path)
+  subdirs = ['course', 'faculty', 'student']
 
-      label = file.split('_')[0]
+  has_subdirs = all(os.path.exists(os.path.join(dir, subdir)) for subdir in subdirs)
 
-      data.append({
-        'filename': file,
-        'html': content,
-        'text': clean_html(content)
-      })
-      labels.append(label)
+  if has_subdirs:
+    print(f"Loading training data from {dir}")
+    for label in subdirs:
+      subdir_path = os.path.join(dir, label)
+      files = os.listdir(subdir_path)
+      print(f"  {label}: {len(files)} files")
+      
+      for filename in files:
+          if filename.endswith('.html'):
+            file_path = os.path.join(subdir_path, filename)
+            content = read_files(file_path)
+            
+            processed = process_html_advanced(content, filename)
+            processed['label'] = label
+            
+            data.append(processed)
+            labels.append(label)
+  else:
+    print('loading test data')
+    files = os.listdir(dir)
+    print(f'found {len(files)} at {dir}')
 
+    for filename in files:
+      if filename.endswith('.html'):
+        file_path = os.path.join(dir, filename)
+        content = read_files(file_path)
+
+        processed = process_html_advanced(content, filename)
+        processed['label'] = 'unk'      # unk labels to test, combine features to a dataset
+        
+        data.append(processed)
+        labels.append('unk')
+  
   return pd.DataFrame(data), labels
+
+  
+
 
 
 
