@@ -13,7 +13,6 @@ Outs:
 """
 
 def read_files(file_path):
-
   try:
     with open(file_path, 'r') as file:
       content = file.read()
@@ -25,6 +24,11 @@ def read_files(file_path):
   
 
 def clean_html(html):
+
+  soup = BeautifulSoup(html,'html.parser')
+
+  for script in soup(['script', 'style']):
+    script.decompose()
   return text
 
 def extract_heading(html):
