@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import re
 from bs4 import BeautifulSoup
 
@@ -35,5 +36,29 @@ def extract_heading(html):
   return string 
 
 def load_datasets(dir):
-  return data, labels
+  
+  data = []
+  labels = []
+
+  if not os.path.exists(dir):
+    print(f'error, {dir} doesnt exist')
+    return pd.DataFrame(), []
+  
+  for file in os.listdir(dir):
+    if file.endswith('.html'):
+      file_path = os.path.join(dir, file)
+      content = read_files(file_path)
+
+      label = file.split('_')[0]
+
+      data.append({
+        'filename': file,
+        'html': content,
+        'text': clean_html(content)
+      })
+      labels.append(label)
+
+  return pd.DataFrame(data), labels
+
+
 
