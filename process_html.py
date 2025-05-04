@@ -58,14 +58,47 @@ def extract_headings(html):
 
 def extract_links(html):
 
+def extract_metadata(html):
+
+
 def extract_objects(html):
 
 def extract_keywords(html):
 
 
-def process_html_advanced(html, filen=""):
+def process_html_advanced(html, file=""):
 
   clean_text = clean_html(html)
+  title = extract_title(html)
+  metadata = extract_metadata(html)
+  headings = extract_headings(html)
+  links = extract_links(html)
+  objects = extract_objects(html)
+  keywords = extract_keywords(html)
+
+  processed_html = {
+    'filename': file,
+    'sourcecode': html,
+    'clean_text': clean_text,
+    'text_length': len(clean_text),
+    'html_length': len(html),
+    **metadata,
+    **keywords,
+    'title': title,
+    'headings': {k: len(v) for k, v in headings.items()},
+    'num_total_headings': sum(len(v) for v in headings.values()),
+    'num_links': len(links),
+    'num_out_links': sum(1 for link in links if link['href'].startswith('http')),
+    'num_emails': sum(1 for link in links if link['href'].startswith('mailto:')),
+    'page_type_keywords': {k: v['count'] for k, v in keywords.items()}
+
+  }
+
+
+
+
+
+
 
 
 
