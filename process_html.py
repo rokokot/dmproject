@@ -79,40 +79,31 @@ def extract_links(html):
     
   return links
 
-def extract_metadata(html):
-
-  soup = BeautifulSoup(html, 'html.parser')
+def extract_patterns(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    text = soup.get_text()  # Get text for regex operations
     
-  meta_info = {'title': soup.title.text if soup.title else '','description': '','keywords': '','author': ''}
+    phone_pattern = r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
+    phone_count = len(re.findall(phone_pattern, text))
     
-  for meta in soup.find_all('meta'):
-      name = meta.get('name', '').lower()
-      content = meta.get('content', '')
-      
-      if name == 'description':
-          meta_info['description'] = content
-      elif name == 'keywords':
-          meta_info['keywords'] = content
-      elif name == 'author':
-          meta_info['author'] = content
-  
-  return meta_info
+    course_pattern = r'[A-Z]{2}\s*\d{3}'
+    has_course_number = bool(re.search(course_pattern, text))
 
+    return {'phone_count': phone_count, 'has_course_number': has_course_number}
 
 def extract_objects(html):
-  soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, 'html.parser')
     
-  objects = {
-    'header': len(soup.find_all('header')) > 0,
-    'nav': len(soup.find_all('nav')) > 0,
-    'main': len(soup.find_all('main')) > 0,
-    'footer': len(soup.find_all('footer')) > 0,
-    'aside': len(soup.find_all('aside')) > 0,
-    'articles': len(soup.find_all('article')),
-    'sections': len(soup.find_all('section'))
-}
+    objects = {
+        'paragraph_count': len(soup.find_all('p')),
+        'hr_count': len(soup.find_all('hr')), 
+        'image_count': len(soup.find_all('img'))
+    }
     
-  return objects
+    return objects
+
+
+
 
 def extract_keywords(html):
   " we can select a set of words we think would frequently be associated with target classes, and count their occurences in a document "
@@ -121,10 +112,10 @@ def extract_keywords(html):
   text = soup.get_text().lower()
   
   keywords = {'student_indicators': {
-          'keywords': ['student', 'students', 'organization', 'club', 'society', 'undergraduate', 'graduate'],
+          'keywords': ['student', 'organization', 'club', 'society', 'undergraduate', 'graduate', 'bs', 'ms'],
           'count': 0},
           'faculty_indicators': {
-          'keywords': ['faculty', 'professor', 'research', 'publication', 'department', 'staff', 'academic'],
+          'keywords': ['faculty', 'professor', 'research', 'publication', 'department', 'staff', 'academic', 'phd'],
           'count': 0},
           'course_indicators': {
           'keywords': ['course', 'syllabus', 'semester', 'assignment', 'lecture', 'exam', 'class', 'credit'],'count': 0}}
@@ -137,35 +128,32 @@ def extract_keywords(html):
 
 
 def process_html(html, file=""):
+    clean_text = clean_html(html)
+    title = extract_title(html)
+    patterns = extract_patterns(html)
+    headings = extract_headings(html)
+    links = extract_links(html)
+    objects = extract_objects(html)
+    keywords = extract_keywords(html)
 
-  clean_text = clean_html(html)
-  title = extract_title(html)
-  metadata = extract_metadata(html)
-  headings = extract_headings(html)
-  links = extract_links(html)
-  objects = extract_objects(html)
-  keywords = extract_keywords(html)
-
-  processed_html = {
-    'filename': file,
-    'sourcecode': html,
-    'clean_text': clean_text,
-    'text_length': len(clean_text),
-    'html_length': len(html),
-    **metadata,
-    **keywords,
-    'title': title,
-    'headings': {k: len(v) for k, v in headings.items()},
-    'num_total_headings': sum(len(v) for v in headings.values()),
-    'num_links': len(links),
-    'num_out_links': sum(1 for link in links if link['href'].startswith('http')),
-    'num_emails': sum(1 for link in links if link['href'].startswith('mailto:')),
-    **objects,
-    'type_keywords': {k: v['count'] for k, v in keywords.items()}
-
+    processed_html = {
+      'filename': file,
+      'sourcecode': html,
+      'clean_text': clean_text,
+      'text_length': len(clean_text),
+      'html_length': len(html),
+      'title': title,
+      'headings': {k: len(v) for k, v in headings.items()},
+      'num_total_headings': sum(len(v) for v in headings.values()),
+      'num_links': len(links),
+      'num_out_links': sum(1 for link in links if link['href'].startswith('http')),
+      'num_emails': sum(1 for link in links if link['href'].startswith('mailto:')),
+      **patterns,  # Fix: spread the patterns
+      **objects,   # Fix: spread the objects
+      'type_keywords': {k: v['count'] for k, v in keywords.items()}
   }
 
-  return processed_html
+    return processed_html
 
 
 
@@ -205,7 +193,7 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
     print(f'found {len(files)} at {dir}')
 
     for filename in files:
-      if filename.endswith('.html'):
+      if os.path.isfile(os.path.join(dir, filename)):  
         file_path = os.path.join(dir, filename)
         content = read_files(file_path)
 
@@ -218,42 +206,36 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
   return pd.DataFrame(data), labels
 
 
-def extract_features(data):     # creates a dict for easy value retrieval, stores results of collection functions above
-
-  features = []
-
-  for idx, row in data.iterrows():
-
-    feature_dict = {
-      'title': 1 if row['title'] else 0,
-      'description': 1 if row['description'] else 0,
-      'keywords': 1 if row['keywords'] else 0,
-      'text_length': row['text_length'],
-      'html_length': row['html_length'],
-      'h1_count': row['headings']['h1'],
-      'h2_count': row['headings']['h2'],
-      'h3_count': row['headings']['h3'],
-      'total_headings': row['num_total_headings'],
-      'link_count': row['num_links'],
-      'external_links': row['num_out_links'],
-      'email_links': row['num_emails'],
-
-      'has_header': 1 if row['header'] else 0,
-      'has_footer': 1 if row['footer'] else 0,
-      'has_main': 1 if row['main'] else 0,
-      'has_nav': 1 if row['nav'] else 0,
-
-      'article_count': row['articles'],
-      'section_count': row['sections'],
-
-      'student_keywords': row['type_keywords']['student_indicators'],
-      'faculty_keywords': row['type_keywords']['faculty_indicators'],
-      'course_keywords': row['type_keywords']['course_indicators']}
-
-    features.append(feature_dict)
-
-
-  return pd.DataFrame(features)
+def extract_features(data):
+    features = []
+    
+    for idx, row in data.iterrows():
+      feature_dict = {
+        'title': 1 if row['title'] else 0,
+        'text_length': row['text_length'],
+        'html_length': row['html_length'],
+        'h1_count': row['headings']['h1'],
+        'h2_count': row['headings']['h2'],
+        'h3_count': row['headings']['h3'],
+        'total_headings': row['num_total_headings'],
+        'link_count': row['num_links'],
+        'external_links': row['num_out_links'],
+        'email_links': row['num_emails'],
+        
+        'phone_count': row['phone_count'],
+        'has_course_number': 1 if row['has_course_number'] else 0,
+        
+        'paragraph_count': row['paragraph_count'],
+        'hr_count': row['hr_count'],
+        'image_count': row['image_count'],
+        
+        'student_keywords': row['type_keywords']['student_indicators'],
+        'faculty_keywords': row['type_keywords']['faculty_indicators'],
+        'course_keywords': row['type_keywords']['course_indicators']
+        }
+      features.append(feature_dict)
+    
+    return pd.DataFrame(features)
   
 
 
