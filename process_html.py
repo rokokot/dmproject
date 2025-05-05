@@ -211,9 +211,11 @@ def extract_features(data):
     
     for idx, row in data.iterrows():
       feature_dict = {
+         # binary features 
         'title': 1 if row['title'] else 0,
-        'text_length': row['text_length'],
-        'html_length': row['html_length'],
+        'has_course_number': 1 if row['has_course_number'] else 0,
+
+        #count features, integers
         'h1_count': row['headings']['h1'],
         'h2_count': row['headings']['h2'],
         'h3_count': row['headings']['h3'],
@@ -221,14 +223,17 @@ def extract_features(data):
         'link_count': row['num_links'],
         'external_links': row['num_out_links'],
         'email_links': row['num_emails'],
-        
         'phone_count': row['phone_count'],
-        'has_course_number': 1 if row['has_course_number'] else 0,
+        
+        'html_length': row['html_length'],
+        'text_length': row['text_length'],
         
         'paragraph_count': row['paragraph_count'],
         'hr_count': row['hr_count'],
         'image_count': row['image_count'],
         
+         # text features, strings
+
         'student_keywords': row['type_keywords']['student_indicators'],
         'faculty_keywords': row['type_keywords']['faculty_indicators'],
         'course_keywords': row['type_keywords']['course_indicators']
