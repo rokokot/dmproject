@@ -15,7 +15,7 @@ Outs:
 
 def read_files(file_path):    # quick file reader to string
   try:
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='iso-8859-1') as file:
       content = file.read()
     return content
   
@@ -103,13 +103,13 @@ def extract_objects(html):
   soup = BeautifulSoup(html, 'html.parser')
     
   objects = {
-    'has_header': len(soup.find_all('header')) > 0,
-    'has_nav': len(soup.find_all('nav')) > 0,
-    'has_main': len(soup.find_all('main')) > 0,
-    'has_footer': len(soup.find_all('footer')) > 0,
-    'has_aside': len(soup.find_all('aside')) > 0,
-    'num_articles': len(soup.find_all('article')),
-    'num_sections': len(soup.find_all('section'))
+    'header': len(soup.find_all('header')) > 0,
+    'nav': len(soup.find_all('nav')) > 0,
+    'main': len(soup.find_all('main')) > 0,
+    'footer': len(soup.find_all('footer')) > 0,
+    'aside': len(soup.find_all('aside')) > 0,
+    'articles': len(soup.find_all('article')),
+    'sections': len(soup.find_all('section'))
 }
     
   return objects
@@ -160,7 +160,7 @@ def process_html(html, file=""):
     'num_links': len(links),
     'num_out_links': sum(1 for link in links if link['href'].startswith('http')),
     'num_emails': sum(1 for link in links if link['href'].startswith('mailto:')),
-    'page_type_keywords': {k: v['count'] for k, v in keywords.items()}
+    'type_keywords': {k: v['count'] for k, v in keywords.items()}
 
   }
 
@@ -221,27 +221,29 @@ def extract_features(data):     # creates a dict for easy value retrieval, store
 
   features = []
 
-  feature_dict = {
-    'title': 1 if row['title'] else 0,
-    'description': ,
-    'header': ,
-    'footer': ,
-    'keywords': ,
-    'len_txt': ,
-    'len_hmtl': ,
-    'txt_html_ratio': ,
-    'count_h1': ,
-    'count_h2': ,
-    'count_h3': ,
-    'count_headings': ,
-    'count_links': ,
-    'count_sections': ,
-    'count_student_kws': ,
-    'count_faculty_kws': ,
-    'count_course_kws': ,
-  }
+  for idx, row in data.iterrows():
 
-  features.append(feature_dict)
+    feature_dict = {
+      'title': 1 if row['title'] else 0,
+      'description': 1 if row['description'] else 0,
+      'header': 1 if row['has_header'] else 0,
+      'footer': 1 if row['has_footer'] else 0,
+      'main': 1 if row['has_main'] else 0,
+      'nav': 1 if row['has_nav'] else 0,
+      'keywords': 1 if row['keywords'] else 0,
+      'len_txt': row['text_length'],
+      'len_hmtl': row['html_length'],
+      'count_h1': row['headings']['h1'],
+      'count_h2': row['headings']['h2'],
+      'count_h3': row['headings']['h3'],
+      'count_headings': row['num_total_headings'],
+      'count_links': row['num_links'],
+      'count_sections': row['num_sections'],
+      'count_student_kws': row['type_keywords']['student_indicators'],
+      'count_faculty_kws': row['type_keywords']['faculty_indicators'],
+      'count_course_kws': row['type_keywords']['course_indicators']}
+
+    features.append(feature_dict)
 
 
   return pd.DataFrame(features)
