@@ -24,7 +24,7 @@ def train_models(features, labels):
         'dummy': DummyClassifier(strategy='most_frequent'),
         'logistic_regression': LogisticRegression(max_iter=200),
         'xgboost': xgb.XGBClassifier(objective='multi:softprob', num_class=3),
-        'mlp': MLPClassifier(hidden_laayer_size=(100,), max_iter=1000)}
+        'mlp': MLPClassifier(hidden_layer_size=(100,), max_iter=1000)}
     
     trained_models = {}
     for name, model in models.items():
@@ -54,7 +54,7 @@ def cv(features, labels):
         'dummy': DummyClassifier(strategy='most_frequent'),
         'logistic_regression': LogisticRegression(max_iter=200),
         'xgboost': xgb.XGBClassifier(objective='multi:softprob', num_class=3),
-        'mlp': MLPClassifier(hidden_laayer_size=(100,), max_iter=1000)}
+        'mlp': MLPClassifier(hidden_layer_size=(100,), max_iter=1000)}
     
     cv_results = {}
     

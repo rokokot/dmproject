@@ -54,9 +54,7 @@ def load_cached_data(cache_file):
 
 
 
-
-
-def extract_title(html):    # important feature to look at
+def extract_title(html):    
   "get first heading from source"
   soup = BeautifulSoup(html, 'html.parser')
 
