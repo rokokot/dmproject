@@ -66,7 +66,7 @@ def extract_objects(html):
 def extract_keywords(html):
 
 
-def process_html_advanced(html, file=""):
+def process_html(html, file=""):
 
   clean_text = clean_html(html)
   title = extract_title(html)
@@ -123,7 +123,7 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
             file_path = os.path.join(subdir_path, filename)
             content = read_files(file_path)
             
-            processed = process_html_advanced(content, filename)
+            processed = process_html(content, filename)
             processed['label'] = label
             
             data.append(processed)
@@ -138,7 +138,7 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
         file_path = os.path.join(dir, filename)
         content = read_files(file_path)
 
-        processed = process_html_advanced(content, filename)
+        processed = process_html(content, filename)
         processed['label'] = 'unk'      # unk labels to test, combine features to a dataset
         
         data.append(processed)
@@ -146,6 +146,13 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
   
   return pd.DataFrame(data), labels
 
+
+def extract_features(data):     # creates a dict for easy value retrieval, stores results of collection functions above
+
+  features = []
+
+
+  return pd.DataFrame(features)
   
 
 
