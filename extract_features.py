@@ -36,6 +36,8 @@ class ItemSelector(BaseEstimator, TransformerMixin):
 
 def create_combined_features(data, labels):
     
+  feature_df = extract_features(data)
+  raw_data = data
     # define a  feature selection pipeline similar to the exercises
 
   features = FeatureUnion(transformer_list=[
@@ -117,10 +119,13 @@ def create_combined_features(data, labels):
         ])),
     ])
   
-    
-  feature_df = extract_features(data)
+  
+  combined_data = raw_data.copy()
+  for col in feature_df.columns:
+    combined_data[col]=feature_df[col]
 
-  feature_matrix = features.fit_transform(feature_df)
+  feature_matrix = features.fit_transform(combined_data)
+
 
   return feature_matrix, features, None, None
 

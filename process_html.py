@@ -228,7 +228,7 @@ def extract_features(data):
     for idx, row in data.iterrows():
       feature_dict = {
          # binary features 
-        'title': 1 if row['title'] else 0,
+        'has_title': 1 if row['title'] else 0,
         'has_course_number': 1 if row['has_course_number'] else 0,
 
         #count features, integers
@@ -249,6 +249,7 @@ def extract_features(data):
         'image_count': row['image_count'],
 
          # text features, strings
+        'clean_text': row['clean_text'],
 
         'student_keywords': row['type_keywords']['student_indicators'],
         'faculty_keywords': row['type_keywords']['faculty_indicators'],

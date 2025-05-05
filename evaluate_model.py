@@ -2,6 +2,7 @@ import pandas as pd
 import pickle
 import numpy as np
 from sklearn.dummy import DummyClassifier
+from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
@@ -19,17 +20,20 @@ Args:
 """
 
 def train_models(features, labels):
+    
+    le = LabelEncoder()
+    encoded_labels = le.fit_transform(labels)
+    
     models = {
-       
         'dummy': DummyClassifier(strategy='most_frequent'),
-        'logistic_regression': LogisticRegression(max_iter=200),
-        'xgboost': xgb.XGBClassifier(objective='multi:softprob', num_class=3),
-        'mlp': MLPClassifier(hidden_layer_size=(100,), max_iter=1000)}
+        'logistic_regression': LogisticRegression(max_iter=1000),
+        'xgboost': xgb.XGBClassifier(objective='multi:softprob'),
+        'mlp': MLPClassifier(hidden_layer_sizes=(100,), max_iter=1000)}
     
     trained_models = {}
     for name, model in models.items():
-        model.fit(features, labels)
-        trained_models[name] = model
+        model.fit(features, encoded_labels)
+        trained_models[name] = (model, le)
     
     return trained_models
 
@@ -37,8 +41,10 @@ def train_models(features, labels):
 def evaluate_models(models, test_features, test_labels=None):
     results = {}
     
-    for name, model in models.items():
-        predictions = model.predict(test_features)
+    for name, (model, le) in models.items():
+        encoded_predictions = model.predict(test_features)
+
+        predictions = le.inverse_transform(encoded_predictions)
         results[name] = predictions
         
         if test_labels is not None:
@@ -50,16 +56,20 @@ def evaluate_models(models, test_features, test_labels=None):
 
 
 def cv(features, labels):
+    
+    le = LabelEncoder()
+    encoded_labels = le.fit_transform(labels)
+    
     models = {
         'dummy': DummyClassifier(strategy='most_frequent'),
-        'logistic_regression': LogisticRegression(max_iter=200),
-        'xgboost': xgb.XGBClassifier(objective='multi:softprob', num_class=3),
-        'mlp': MLPClassifier(hidden_layer_size=(100,), max_iter=1000)}
+        'logistic_regression': LogisticRegression(max_iter=1000),
+        'xgboost': xgb.XGBClassifier(objective='multi:softprob'),
+        'mlp': MLPClassifier(hidden_layer_sizes=(100,), max_iter=1000)}
     
     cv_results = {}
     
     for name, model in models.items():
-        scores = cross_val_score(model, features, labels, cv=10)
+        scores = cross_val_score(model, features, encoded_labels, cv=10)
         cv_results[name] = scores
         
         print(f"\n{name}:")
