@@ -38,7 +38,7 @@ def create_combined_features(data, labels):
     
     # define a  feature selection pipeline similar to the exercises
 
-    features = FeatureUnion(transformer_list=[
+  features = FeatureUnion(transformer_list=[
         ('text', Pipeline([
             ('selector', ItemSelector(key='clean_text')),
             ('tfidf', TfidfVectorizer(stop_words='english', max_features=1000)),
@@ -110,9 +110,9 @@ def create_combined_features(data, labels):
     ])
   
     
-feature_df = extract_features(data)
+  feature_df = extract_features(data)
 
-feature_matrix = features.fit_transform(feature_df)
+  feature_matrix = features.fit_transform(feature_df)
 
-return feature_matrix, features, None, None
+  return feature_matrix, features, None, None
 
