@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import re
+import pickle
+from tqdm import tqdm
 from bs4 import BeautifulSoup
 
 """
@@ -37,6 +39,22 @@ def clean_html(html):   # very similar to exercise code
   chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
   text = ' '.join(chunk for chunk in chunks if chunk)     # beautiful loop
   return text
+
+
+def cache_processed_data(data,cache_file):    #reading files and parsing them into cache, to avoid long runtime
+   
+   with open(cache_file, 'wb') as f:
+      pickle.dump(data, f)
+
+def load_cached_data(cache_file):
+  if os.path.exists(cache_file):
+      with open(cache_file, 'rb') as f:
+         return pickle.load(f)
+  return None
+
+
+
+
 
 def extract_title(html):    # important feature to look at
   "get first heading from source"
@@ -177,7 +195,7 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
       files = os.listdir(subdir_path)
       print(f"  {label}: {len(files)} files")
       
-      for filename in files:
+      for filename in tqdm(files, desc=f"processing {label} files"):
           if os.path.isfile(os.path.join(subdir_path, filename)):
             file_path = os.path.join(subdir_path, filename)
             content = read_files(file_path)
@@ -192,7 +210,7 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
     files = os.listdir(dir)
     print(f'found {len(files)} at {dir}')
 
-    for filename in files:
+    for filename in tqdm(files, desc=f"processing {label} files"):    # bar to monitor bd parsing progress
       if os.path.isfile(os.path.join(dir, filename)):  
         file_path = os.path.join(dir, filename)
         content = read_files(file_path)
@@ -231,7 +249,7 @@ def extract_features(data):
         'paragraph_count': row['paragraph_count'],
         'hr_count': row['hr_count'],
         'image_count': row['image_count'],
-        
+
          # text features, strings
 
         'student_keywords': row['type_keywords']['student_indicators'],

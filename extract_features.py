@@ -47,6 +47,14 @@ def create_combined_features(data, labels):
             ('selector', ItemSelector(key='title')),
             ('counts', CountVectorizer(stop_words='english', max_features=200)),
         ])),
+        ('text_length', Pipeline([
+          ('selector', ItemSelector(key='text_length', to_dict=True)),
+          ('sparse', DictVectorizer(sparse=True)),
+        ])),
+        ('html_length', Pipeline([
+            ('selector', ItemSelector(key='html_length', to_dict=True)),
+            ('sparse', DictVectorizer(sparse=True)),
+        ])),
         ('h1_count', Pipeline([
             ('selector', ItemSelector(key='h1_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
