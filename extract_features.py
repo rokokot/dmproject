@@ -127,5 +127,29 @@ def create_combined_features(data, labels):
   feature_matrix = features.fit_transform(combined_data)
 
 
+  feature_names = []
+  for name, transformer in features.transformer_list:
+      if hasattr(transformer, 'get_feature_names_out'):
+          names = transformer.get_feature_names_out()
+      else:
+          #  DictVectorizer features
+          try:
+              names = transformer.named_steps['sparse'].get_feature_names_out()
+          except:
+              # Fallback if names can't be retrieved
+              n_features = transformer.transform(combined_data).shape[1]
+              names = [f'{name}_{i}' for i in range(n_features)]
+      
+      feature_names.extend([f'{name}__{n}' for n in names])
+  
+  dense_matrix = feature_matrix.toarray() if hasattr(feature_matrix, 'toarray') else feature_matrix
+
+
+  feature_df_export = pd.DataFrame(dense_matrix, columns=feature_names)
+  
+  feature_df_export.to_csv('featurematrix.csv')   # save to csv
+  
+  print(f"Feature matrix exported to featurematrix.csv ({feature_matrix.shape[0]} rows, {feature_matrix.shape[1]} columns)")
+  
   return feature_matrix, features, None, None
 
