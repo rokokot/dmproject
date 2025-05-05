@@ -36,11 +36,11 @@ class ItemSelector(BaseEstimator, TransformerMixin):
 
 def create_combined_features(data, labels):
     
-  feature_df = extract_features(data)
-  raw_data = data
+    feature_df = extract_features(data)
+    raw_data = data
     # define a  feature selection pipeline similar to the exercises
 
-  features = FeatureUnion(transformer_list=[
+    features = FeatureUnion(transformer_list=[
         ('text', Pipeline([
             ('selector', ItemSelector(key='clean_text')),
             ('tfidf', TfidfVectorizer(stop_words='english', max_features=1000)),
@@ -49,107 +49,120 @@ def create_combined_features(data, labels):
             ('selector', ItemSelector(key='title')),
             ('counts', CountVectorizer(stop_words='english', max_features=200)),
         ])),
-        ('text_length', Pipeline([
+        ('clean_', Pipeline([
           ('selector', ItemSelector(key='text_length', to_dict=True)),
           ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('html_length', Pipeline([
+        ('full', Pipeline([
             ('selector', ItemSelector(key='html_length', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('h1_count', Pipeline([
+        ('h1', Pipeline([
             ('selector', ItemSelector(key='h1_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('h2_count', Pipeline([
+        ('h2', Pipeline([
             ('selector', ItemSelector(key='h2_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('h3_count', Pipeline([
+        ('h3', Pipeline([
             ('selector', ItemSelector(key='h3_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('total_headings', Pipeline([
+        ('he', Pipeline([
             ('selector', ItemSelector(key='total_headings', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('link_count', Pipeline([
+        ('l', Pipeline([
             ('selector', ItemSelector(key='link_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('external_links', Pipeline([
+        ('ex', Pipeline([
             ('selector', ItemSelector(key='external_links', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('email_links', Pipeline([
+        ('e', Pipeline([
             ('selector', ItemSelector(key='email_links', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('phone_count', Pipeline([
+        ('ph', Pipeline([
             ('selector', ItemSelector(key='phone_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('has_course_number', Pipeline([
+        ('n', Pipeline([
             ('selector', ItemSelector(key='has_course_number', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('paragraph_count', Pipeline([
+        ('p', Pipeline([
             ('selector', ItemSelector(key='paragraph_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('hr_count', Pipeline([
+        ('h', Pipeline([
             ('selector', ItemSelector(key='hr_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('image_count', Pipeline([
+        ('i', Pipeline([
             ('selector', ItemSelector(key='image_count', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('student_keywords', Pipeline([
+        ('sk', Pipeline([
             ('selector', ItemSelector(key='student_keywords', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('faculty_keywords', Pipeline([
+        ('fk', Pipeline([
             ('selector', ItemSelector(key='faculty_keywords', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
         ])),
-        ('course_keywords', Pipeline([
+        ('ck', Pipeline([
             ('selector', ItemSelector(key='course_keywords', to_dict=True)),
             ('sparse', DictVectorizer(sparse=True)),
-        ])),
-    ])
+        ])),])
   
   
-  combined_data = raw_data.copy()
-  for col in feature_df.columns:
-    combined_data[col]=feature_df[col]
+    combined_data = raw_data.copy()
+    for col in feature_df.columns:
+        combined_data[col]=feature_df[col]
 
-  feature_matrix = features.fit_transform(combined_data)
-
-
-  feature_names = []
-  for name, transformer in features.transformer_list:
-      if hasattr(transformer, 'get_feature_names_out'):
-          names = transformer.get_feature_names_out()
-      else:
-          #  DictVectorizer features
-          try:
-              names = transformer.named_steps['sparse'].get_feature_names_out()
-          except:
-              # Fallback if names can't be retrieved
-              n_features = transformer.transform(combined_data).shape[1]
-              names = [f'{name}_{i}' for i in range(n_features)]
-      
-      feature_names.extend([f'{name}__{n}' for n in names])
-  
-  dense_matrix = feature_matrix.toarray() if hasattr(feature_matrix, 'toarray') else feature_matrix
+    feature_matrix = features.fit_transform(combined_data)
 
 
-  feature_df_export = pd.DataFrame(dense_matrix, columns=feature_names)
-  
-  feature_df_export.to_csv('featurematrix.csv')   # save to csv
-  
-  print(f"Feature matrix exported to featurematrix.csv ({feature_matrix.shape[0]} rows, {feature_matrix.shape[1]} columns)")
-  
-  return feature_matrix, features, None, None
+    feature_names = []
+    
+    try:
+        for name, transformer in features.transformer_list:
+
+            if hasattr(transformer, 'get_feature_names_out'):
+                try:
+                    names = transformer.get_feature_names_out()
+                    feature_names.extend([f"{name}__{n}" for n in names])
+                    continue
+                except:
+                    pass
+                
+            if hasattr(transformer, 'steps'):
+                last_step = transformer.steps[-1][1]
+                if hasattr(last_step, 'get_feature_names_out'):
+                    try:
+                        names = last_step.get_feature_names_out()
+                        feature_names.extend([f"{name}__{n}" for n in names])
+                        continue
+                    except:
+                        pass
+            
+            n_features = transformer.transform(combined_data).shape[1]
+            feature_names.extend([f"{name}_{i}" for i in range(n_features)])
+    except:
+        feature_names = [f'feature_{i}' for i in range(feature_matrix.shape[1])]
+
+    if hasattr(feature_matrix, 'toarray'):
+        dense_matrix = feature_matrix.toarray()
+    else:
+        dense_matrix = feature_matrix
+
+    feature_df_export = pd.DataFrame(dense_matrix,  columns=feature_names, index=data['filename'])
+
+    feature_df_export.to_csv('featurematrix.csv')
+    print(f"Feature matrix exported to featurematrix.csv ({feature_matrix.shape[0]} rows, {feature_matrix.shape[1]} columns)")
+
+    return feature_matrix, features, None, None
 

@@ -38,7 +38,7 @@ def main(): # run function with arguments
   test_cache_file = os.path.join(args.cache_dir, 'processed_test.pkl')
 
   print("Loading training data...")
-  
+
   if args.use_cache:
 
     cached_data = load_cached_data(train_cache_file)
@@ -95,30 +95,27 @@ def main(): # run function with arguments
   print("\nPerforming t-tests...")
   t_test_results = t_test(cv_results)
   
-  print("\nresults:")
+  print("\n T-test results:")
+
   for comparison, stats in t_test_results.items():
       print(f"\n{comparison}:")
-      print(f"  Mean difference: {stats['mean_diff']:.4f}")
-      print(f"  T-statistic: {stats['t_stat']:.4f}")
-      print(f"  P-value: {stats['p_value']:.4f}")
+      print(f"  Mean difference: {stats['mean_diff']}")
+      print(f"  T-statistic: {stats['t_stat']}")
+      print(f"  P-value: {stats['p_value']}")
   
-  best_model_name = max(cv_results.items(), key=lambda x: x[1].mean())[0]
-  print(f"\nbest model: {best_model_name}")
   
   trained_models = train_models(X_train, train_labels)
   
   test_predictions = evaluate_models(trained_models, X_test)
   
   results_df = pd.DataFrame({'filename': test_data['filename'].values})
+
   for model_name, predictions in test_predictions.items():
       results_df[f'{model_name}_prediction'] = predictions
   
   results_df.to_csv('results/test_predictions.csv', index=False)
-  
-  with open(f'results/best_model_{best_model_name}.pkl', 'wb') as f:
-      pickle.dump(trained_models[best_model_name], f)
-  
-  print("\nResults saved to 'results' directory")
+
+  print("test set predictions for each model saved to ./results")
 
 
 if __name__ == '__main__':

@@ -111,7 +111,7 @@ def cv(features, labels):
     return cv_results
 
 
-def t_test(cv_results):     # scipy reference implementation
+def t_test(cv_results):     # scipy  implementation from exercises
     
     models = list(cv_results.keys())
     results = {}
@@ -124,13 +124,14 @@ def t_test(cv_results):     # scipy reference implementation
             scores1 = cv_results[model1]
             scores2 = cv_results[model2]
             
-            t_stat, p_value = ttest_rel(scores1, scores2)
+            result = ttest_rel(scores1, scores2)
             
             results[f"{model1} vs {model2}"] = {
                 'mean_diff': np.mean(scores1) - np.mean(scores2),
-                't_stat': t_stat,
-                'p_value': p_value}
-    
+                't_stat': result.statistic,
+                'p_value': result.pvalue
+            }
+      
     return results
 
 
