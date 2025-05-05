@@ -43,7 +43,6 @@ def extract_title(html):    # important feature to look at
   soup = BeautifulSoup(html, 'html.parser')
 
   h1 = soup.find('h1')
-  
   if h1:
     return h1.text.strip()
 
@@ -221,6 +220,28 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
 def extract_features(data):     # creates a dict for easy value retrieval, stores results of collection functions above
 
   features = []
+
+  feature_dict = {
+    'title': 1 if row['title'] else 0,
+    'description': ,
+    'header': ,
+    'footer': ,
+    'keywords': ,
+    'len_txt': ,
+    'len_hmtl': ,
+    'txt_html_ratio': ,
+    'count_h1': ,
+    'count_h2': ,
+    'count_h3': ,
+    'count_headings': ,
+    'count_links': ,
+    'count_sections': ,
+    'count_student_kws': ,
+    'count_faculty_kws': ,
+    'count_course_kws': ,
+  }
+
+  features.append(feature_dict)
 
 
   return pd.DataFrame(features)
