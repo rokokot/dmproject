@@ -7,3 +7,5 @@ main.pdf
 
 # Mac system files
 .DS_Store
+
+*.ipynb

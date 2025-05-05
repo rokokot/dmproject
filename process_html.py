@@ -160,6 +160,7 @@ def process_html(html, file=""):
     'num_links': len(links),
     'num_out_links': sum(1 for link in links if link['href'].startswith('http')),
     'num_emails': sum(1 for link in links if link['href'].startswith('mailto:')),
+    **objects,
     'type_keywords': {k: v['count'] for k, v in keywords.items()}
 
   }
@@ -189,7 +190,7 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
       print(f"  {label}: {len(files)} files")
       
       for filename in files:
-          if filename.endswith('.html'):
+          if os.path.isfile(os.path.join(subdir_path, filename)):
             file_path = os.path.join(subdir_path, filename)
             content = read_files(file_path)
             
@@ -226,22 +227,28 @@ def extract_features(data):     # creates a dict for easy value retrieval, store
     feature_dict = {
       'title': 1 if row['title'] else 0,
       'description': 1 if row['description'] else 0,
-      'header': 1 if row['has_header'] else 0,
-      'footer': 1 if row['has_footer'] else 0,
-      'main': 1 if row['has_main'] else 0,
-      'nav': 1 if row['has_nav'] else 0,
       'keywords': 1 if row['keywords'] else 0,
-      'len_txt': row['text_length'],
-      'len_hmtl': row['html_length'],
-      'count_h1': row['headings']['h1'],
-      'count_h2': row['headings']['h2'],
-      'count_h3': row['headings']['h3'],
-      'count_headings': row['num_total_headings'],
-      'count_links': row['num_links'],
-      'count_sections': row['num_sections'],
-      'count_student_kws': row['type_keywords']['student_indicators'],
-      'count_faculty_kws': row['type_keywords']['faculty_indicators'],
-      'count_course_kws': row['type_keywords']['course_indicators']}
+      'text_length': row['text_length'],
+      'html_length': row['html_length'],
+      'h1_count': row['headings']['h1'],
+      'h2_count': row['headings']['h2'],
+      'h3_count': row['headings']['h3'],
+      'total_headings': row['num_total_headings'],
+      'link_count': row['num_links'],
+      'external_links': row['num_out_links'],
+      'email_links': row['num_emails'],
+
+      'has_header': 1 if row['header'] else 0,
+      'has_footer': 1 if row['footer'] else 0,
+      'has_main': 1 if row['main'] else 0,
+      'has_nav': 1 if row['nav'] else 0,
+
+      'article_count': row['articles'],
+      'section_count': row['sections'],
+
+      'student_keywords': row['type_keywords']['student_indicators'],
+      'faculty_keywords': row['type_keywords']['faculty_indicators'],
+      'course_keywords': row['type_keywords']['course_indicators']}
 
     features.append(feature_dict)
 
