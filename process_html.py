@@ -54,16 +54,87 @@ def extract_title(html):    # important feature to look at
 
   return ""
 
-def extract_headings(html):   # rational behind this
+def extract_headings(html):   
+  " count all headings "
+  soup = BeautifulSoup(html, 'html.parser')
+    
+  headings = {'h1': [], 'h2': [], 'h3': [], 'h4': [], 'h5': [], 'h6': []}
+    
+  for tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+    for heading in soup.find_all(tag):
+      headings[tag].append(heading.text.strip())
+    
+  return headings
 
 def extract_links(html):
+  soup = BeautifulSoup(html, 'html.parser')
+    
+  links = []
+  for a_tag in soup.find_all('a'):
+      link_info = {
+          'text': a_tag.text.strip(),
+          'href': a_tag.get('href', ''),
+          'title': a_tag.get('title', '')
+      }
+      links.append(link_info)
+    
+  return links
 
 def extract_metadata(html):
 
+  soup = BeautifulSoup(html, 'html.parser')
+    
+  meta_info = {'title': soup.title.text if soup.title else '','description': '','keywords': '','author': ''}
+    
+  for meta in soup.find_all('meta'):
+      name = meta.get('name', '').lower()
+      content = meta.get('content', '')
+      
+      if name == 'description':
+          meta_info['description'] = content
+      elif name == 'keywords':
+          meta_info['keywords'] = content
+      elif name == 'author':
+          meta_info['author'] = content
+  
+  return meta_info
+
 
 def extract_objects(html):
+  soup = BeautifulSoup(html, 'html.parser')
+    
+  objects = {
+    'has_header': len(soup.find_all('header')) > 0,
+    'has_nav': len(soup.find_all('nav')) > 0,
+    'has_main': len(soup.find_all('main')) > 0,
+    'has_footer': len(soup.find_all('footer')) > 0,
+    'has_aside': len(soup.find_all('aside')) > 0,
+    'num_articles': len(soup.find_all('article')),
+    'num_sections': len(soup.find_all('section'))
+}
+    
+  return objects
 
 def extract_keywords(html):
+  " we can select a set of words we think would frequently be associated with target classes, and count their occurences in a document "
+
+  soup = BeautifulSoup(html, 'html.parser')
+  text = soup.get_text().lower()
+  
+  keywords = {'student_indicators': {
+          'keywords': ['student', 'students', 'organization', 'club', 'society', 'undergraduate', 'graduate'],
+          'count': 0},
+          'faculty_indicators': {
+          'keywords': ['faculty', 'professor', 'research', 'publication', 'department', 'staff', 'academic'],
+          'count': 0},
+          'course_indicators': {
+          'keywords': ['course', 'syllabus', 'semester', 'assignment', 'lecture', 'exam', 'class', 'credit'],'count': 0}}
+  
+  for category, words in keywords.items():
+      for keyword in words['keywords']:
+          words['count'] += text.count(keyword)
+  
+  return keywords
 
 
 def process_html(html, file=""):
