@@ -208,7 +208,7 @@ def load_datasets(dir):   # function to read data from html files, and annotate 
     files = os.listdir(dir)
     print(f'found {len(files)} at {dir}')
 
-    for filename in tqdm(files, desc=f"processing {label} files"):    # bar to monitor bd parsing progress
+    for filename in tqdm(files, desc=f"processing test files"):    # bar to monitor bd parsing progress
       if os.path.isfile(os.path.join(dir, filename)):  
         file_path = os.path.join(dir, filename)
         content = read_files(file_path)
