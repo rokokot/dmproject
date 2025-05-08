@@ -38,7 +38,7 @@ def create_combined_features(data, labels):
     
     feature_df = extract_features(data)
     raw_data = data
-    # define a  feature selection pipeline similar to the exercises
+    #  feature selection pipeline similar to the exercises
 
     features = FeatureUnion(transformer_list=[
         ('text', Pipeline([
@@ -49,7 +49,7 @@ def create_combined_features(data, labels):
             ('selector', ItemSelector(key='title')),
             ('counts', CountVectorizer(stop_words='english', max_features=200)),
         ])),
-        ('clean_', Pipeline([
+        ('clean', Pipeline([
           ('selector', ItemSelector(key='text_length', to_dict=True)),
           ('sparse', DictVectorizer(sparse=True)),
         ])),
