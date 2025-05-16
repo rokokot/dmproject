@@ -38,4 +38,4 @@ We implemented a simple text classification pipeline that trains and evaluates a
 python main.py --train_dir data/train --test_dir data/test
 ```
 
-the script should also load these directories by default, so the setup should work just as well with no args
+the script should also load these directories by default, so the setup should work just as well with no argparse flag, ie python main.py
