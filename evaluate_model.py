@@ -24,7 +24,7 @@ Args:
 Outs:
 """
 
-RANDOM_SEED = 42
+RANDOM_SEED = 69
 np.random.seed(RANDOM_SEED)
 
 
@@ -130,6 +130,11 @@ def cross_validate(data, labels, n_folds=10):
             print(f"    Training {name} for fold {fold_num}...")
             model.fit(X_train, [y_train[i] for i in range(len(y_train))])
             
+            train_labels_array = np.array(y_train)
+            test_labels_array = np.array(y_test)        # for test labels
+        
+            model.fit(X_train, train_labels_array)
+        
             y_pred = model.predict(X_test)
             
             # scores
