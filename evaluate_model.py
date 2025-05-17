@@ -11,9 +11,7 @@ from sklearn.model_selection import StratifiedKFold
 import xgboost as xgb
 from scipy.stats import ttest_rel
 
- 
 from extract_features import extract_features_from_data
-    
 
 """
 Main training script for our classifier models..
@@ -83,17 +81,21 @@ def evaluate_models(models, test_features, test_labels=None):
 
 
 def cross_validate(data, labels, n_folds=10):
- 
+    # First encode all labels - but we'll use a common encoder to avoid issues
     le = LabelEncoder()
-    encoded_labels = le.fit_transform(labels)
+    le.fit(labels)  # Make sure encoder knows all possible classes
     
     # Define models with fixed random seeds
     models = {
         'dummy': DummyClassifier(strategy='most_frequent', random_state=RANDOM_SEED),
         'logistic_regression': LogisticRegression(max_iter=2000, solver='liblinear', random_state=RANDOM_SEED),
-        'xgboost': xgb.XGBClassifier(objective='multi:softprob', n_estimators=100, verbosity=1, random_state=RANDOM_SEED),
+        # Set verbosity to 0 for XGBoost to reduce output
+        'xgboost': xgb.XGBClassifier(objective='multi:softprob', n_estimators=100, verbosity=0, random_state=RANDOM_SEED),
         'mlp': MLPClassifier(hidden_layer_sizes=(100,), max_iter=1000, verbose=False, random_state=RANDOM_SEED)
     }
+    
+    # Create encoded labels array for stratified splits
+    encoded_labels = le.transform(labels)
     
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
     
@@ -112,35 +114,41 @@ def cross_validate(data, labels, n_folds=10):
         precisions = np.zeros(n_folds)
         recalls = np.zeros(n_folds)
         
-     
         for fold_idx, (train_idx, test_idx) in enumerate(skf.split(data, encoded_labels)):
             fold_num = fold_idx + 1
             print(f"  Processing fold {fold_num}/{n_folds}...")
             
-       
+            # Get data for this fold
             train_data = data.iloc[train_idx]
             test_data = data.iloc[test_idx]
-            y_train = [labels[i] for i in train_idx]
-            y_test = [labels[i] for i in test_idx]
+            
+            # Get the encoded labels directly from our encoded array
+            train_labels_enc = encoded_labels[train_idx]
+            test_labels_enc = encoded_labels[test_idx]
+            
+            # Get original string labels for test set (needed for evaluation)
+            test_labels_list = [labels[i] for i in test_idx]
+            test_labels_array = np.array(test_labels_list)
             
             print(f"    getting features for fold {fold_num}...")
             X_train, feature_pipeline = extract_features_from_data(train_data)
             X_test, _ = extract_features_from_data(test_data, feature_pipeline)
             
             print(f"    Training {name} for fold {fold_num}...")
-            model.fit(X_train, [y_train[i] for i in range(len(y_train))])
             
-            train_labels_array = np.array(y_train)
-            test_labels_array = np.array(y_test)        # for test labels
-        
-            model.fit(X_train, train_labels_array)
-        
-            y_pred = model.predict(X_test)
+            # Train model using encoded labels to avoid XGBoost issues
+            model.fit(X_train, train_labels_enc)
             
-            # scores
-            accuracies[fold_idx] = accuracy_score(y_test, y_pred)
-            precisions[fold_idx] = precision_score(y_test, y_pred, average='weighted')
-            recalls[fold_idx] = recall_score(y_test, y_pred, average='weighted')
+            # Make predictions
+            y_pred_enc = model.predict(X_test)
+            
+            # Convert predictions back to original labels for evaluation
+            y_pred = le.inverse_transform(y_pred_enc)
+            
+            # Calculate metrics using original labels
+            accuracies[fold_idx] = accuracy_score(test_labels_array, y_pred)
+            precisions[fold_idx] = precision_score(test_labels_array, y_pred, average='weighted')
+            recalls[fold_idx] = recall_score(test_labels_array, y_pred, average='weighted')
             
             print(f"    Fold {fold_num} results: Acc={accuracies[fold_idx]:.4f}, "
                   f"Prec={precisions[fold_idx]:.4f}, Rec={recalls[fold_idx]:.4f}")
@@ -168,14 +176,12 @@ def cross_validate(data, labels, n_folds=10):
         print(f"    Recall:    {np.mean(recalls):.2f}")
     
     total_duration = time.time() - start
-
     print(f"cross-validation duration: {total_duration:.1f} seconds")
 
     return cv_results, metrics_results
 
 
 def t_test(cv_results):
- 
     models = list(cv_results.keys())
     results = {}
     

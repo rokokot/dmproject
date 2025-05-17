@@ -97,12 +97,12 @@ def main():
         t_test_df = []
         for comparison, stats in t_test_results.items():
             print(f"\n{comparison}:")
-            print(f"  Mean delta: {stats['mean_diff']:.3f}")
+            print(f"  Mean delta: {stats['mean_delta']:.3f}")
             print(f"  t-statistic: {stats['t_stat']:.3f}")
          
             t_test_df.append({
                 'Comparison': comparison,
-                'Mean_Difference': stats['mean_diff'],
+                'Mean_Delta': stats['mean_delta'],
                 't_statistic': stats['t_stat']
             })
         
@@ -118,8 +118,8 @@ def main():
     
     trained_models = train_models(X_train, train_labels)
     
-    # save model checkpoints and parameters
-    with open('results/trained_models.pkl', 'wb') as f:
+    
+    with open('results/trained_models.pkl', 'wb') as f:         # save model checkpoints and parameters
         pickle.dump(trained_models, f)
     print("Trained models saved to results/trained_models.pkl")
     
